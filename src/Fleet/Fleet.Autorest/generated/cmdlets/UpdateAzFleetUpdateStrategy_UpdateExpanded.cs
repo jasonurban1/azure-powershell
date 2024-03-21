@@ -205,18 +205,6 @@ namespace Microsoft.Azure.PowerShell.Cmdlets.Fleet.Cmdlets
         [global::Microsoft.Azure.PowerShell.Cmdlets.Fleet.Category(global::Microsoft.Azure.PowerShell.Cmdlets.Fleet.ParameterCategory.Path)]
         public string ResourceGroupName { get => this._resourceGroupName; set => this._resourceGroupName = value; }
 
-        /// <summary>The list of stages that compose this update run. Min size: 1.</summary>
-        [global::System.Management.Automation.AllowEmptyCollection]
-        [global::System.Management.Automation.Parameter(Mandatory = false, HelpMessage = "The list of stages that compose this update run. Min size: 1.")]
-        [global::Microsoft.Azure.PowerShell.Cmdlets.Fleet.Category(global::Microsoft.Azure.PowerShell.Cmdlets.Fleet.ParameterCategory.Body)]
-        [Microsoft.Azure.PowerShell.Cmdlets.Fleet.Runtime.Info(
-        Required = false,
-        ReadOnly = false,
-        Description = @"The list of stages that compose this update run. Min size: 1.",
-        SerializedName = @"stages",
-        PossibleTypes = new [] { typeof(Microsoft.Azure.PowerShell.Cmdlets.Fleet.Models.IUpdateStage) })]
-        public Microsoft.Azure.PowerShell.Cmdlets.Fleet.Models.IUpdateStage[] StrategyStage { get => _resourceBody.StrategyStage?.ToArray() ?? null /* fixedArrayOf */; set => _resourceBody.StrategyStage = (value != null ? new System.Collections.Generic.List<Microsoft.Azure.PowerShell.Cmdlets.Fleet.Models.IUpdateStage>(value) : null); }
-
         /// <summary>Backing field for <see cref="SubscriptionId" /> property.</summary>
         private string _subscriptionId;
 
@@ -312,6 +300,16 @@ namespace Microsoft.Azure.PowerShell.Cmdlets.Fleet.Cmdlets
             {
                 // Flush buffer
                 WriteObject(_firstResponse);
+            }
+            var telemetryInfo = Microsoft.Azure.PowerShell.Cmdlets.Fleet.Module.Instance.GetTelemetryInfo?.Invoke(__correlationId);
+            if (telemetryInfo != null)
+            {
+                telemetryInfo.TryGetValue("SanitizedProperties", out var sanitizedProperties);
+                telemetryInfo.TryGetValue("InvocationName", out var invocationName);
+                if (!string.IsNullOrEmpty(sanitizedProperties))
+                {
+                    WriteWarning($"The output of cmdlet {invocationName ?? "Unknown"} may compromise security by showing the following secrets: {sanitizedProperties}. Learn more at https://go.microsoft.com/fwlink/?linkid=2258844");
+                }
             }
         }
 
@@ -502,7 +500,7 @@ namespace Microsoft.Azure.PowerShell.Cmdlets.Fleet.Cmdlets
                     await ((Microsoft.Azure.PowerShell.Cmdlets.Fleet.Runtime.IEventListener)this).Signal(Microsoft.Azure.PowerShell.Cmdlets.Fleet.Runtime.Events.CmdletBeforeAPICall); if( ((Microsoft.Azure.PowerShell.Cmdlets.Fleet.Runtime.IEventListener)this).Token.IsCancellationRequested ) { return; }
                     _resourceBody = await this.Client.FleetUpdateStrategiesGetWithResult(SubscriptionId, ResourceGroupName, FleetName, Name, this, Pipeline);
                     this.Update_resourceBody();
-                    await this.Client.FleetUpdateStrategiesCreateOrUpdate(SubscriptionId, ResourceGroupName, FleetName, Name, this.InvocationInformation.BoundParameters.ContainsKey("IfMatch") ? IfMatch : null, this.InvocationInformation.BoundParameters.ContainsKey("IfNoneMatch") ? IfNoneMatch : null, _resourceBody, onOk, onDefault, this, Pipeline);
+                    await this.Client.FleetUpdateStrategiesCreateOrUpdate(SubscriptionId, ResourceGroupName, FleetName, Name, this.InvocationInformation.BoundParameters.ContainsKey("IfMatch") ? IfMatch : null, this.InvocationInformation.BoundParameters.ContainsKey("IfNoneMatch") ? IfNoneMatch : null, _resourceBody, onOk, onDefault, this, Pipeline, Microsoft.Azure.PowerShell.Cmdlets.Fleet.Runtime.SerializationMode.IncludeUpdate);
                     await ((Microsoft.Azure.PowerShell.Cmdlets.Fleet.Runtime.IEventListener)this).Signal(Microsoft.Azure.PowerShell.Cmdlets.Fleet.Runtime.Events.CmdletAfterAPICall); if( ((Microsoft.Azure.PowerShell.Cmdlets.Fleet.Runtime.IEventListener)this).Token.IsCancellationRequested ) { return; }
                 }
                 catch (Microsoft.Azure.PowerShell.Cmdlets.Fleet.Runtime.UndeclaredResponseException urexception)
@@ -536,10 +534,22 @@ namespace Microsoft.Azure.PowerShell.Cmdlets.Fleet.Cmdlets
 
         private void Update_resourceBody()
         {
-            if ((bool)(true == this.MyInvocation?.BoundParameters.ContainsKey("StrategyStage")))
-            {
-                this.StrategyStage = (Microsoft.Azure.PowerShell.Cmdlets.Fleet.Models.IUpdateStage[])(this.MyInvocation?.BoundParameters["StrategyStage"]);
-            }
+
+        }
+
+        /// <param name="sendToPipeline"></param>
+        new protected void WriteObject(object sendToPipeline)
+        {
+            Microsoft.Azure.PowerShell.Cmdlets.Fleet.Module.Instance.SanitizeOutput?.Invoke(sendToPipeline, __correlationId);
+            base.WriteObject(sendToPipeline);
+        }
+
+        /// <param name="sendToPipeline"></param>
+        /// <param name="enumerateCollection"></param>
+        new protected void WriteObject(object sendToPipeline, bool enumerateCollection)
+        {
+            Microsoft.Azure.PowerShell.Cmdlets.Fleet.Module.Instance.SanitizeOutput?.Invoke(sendToPipeline, __correlationId);
+            base.WriteObject(sendToPipeline, enumerateCollection);
         }
 
         /// <summary>
